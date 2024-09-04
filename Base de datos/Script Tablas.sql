@@ -36,3 +36,57 @@ create table registro(
 	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo)
 
 );
+
+Triggers 
+
+CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
+RETURNS TRIGGER AS $$
+DECLARE
+    lugar_disponible CHAR(3);
+BEGIN
+    -- Seleccionar un lugar de parqueo disponible
+    SELECT lugar_parqueo INTO lugar_disponible
+    FROM Lugar_Parking
+    WHERE Disponible = true
+    ORDER BY RANDOM()
+    LIMIT 1
+    FOR UPDATE;
+    
+    -- Verificar si hay un lugar disponible
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No hay lugares de parqueo disponibles';
+    END IF;
+
+    -- Asignar el lugar de parqueo encontrado al nuevo registro
+    NEW.lugar_parqueo := lugar_disponible;
+
+    -- Marcar el lugar de parqueo como ocupado
+    UPDATE Lugar_Parking
+    SET Disponible = false
+    WHERE lugar_parqueo = lugar_disponible;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER before_insert_registro
+BEFORE INSERT ON registro
+FOR EACH ROW
+EXECUTE FUNCTION asignar_lugar_parqueo();
+
+CREATE OR REPLACE FUNCTION limpiar_lugar_parqueo()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Marcar el lugar de parqueo como disponible
+    UPDATE Lugar_Parking
+    SET Disponible = true
+    WHERE lugar_parqueo = OLD.lugar_parqueo;
+
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER limpiar_lugar
+AFTER DELETE ON registro
+FOR EACH ROW
+EXECUTE FUNCTION limpiar_lugar_parqueo();

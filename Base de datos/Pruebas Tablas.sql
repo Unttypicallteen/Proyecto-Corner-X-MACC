@@ -26,4 +26,6 @@ insert into lugar_parking values ('A06', TRUE);
 insert into lugar_parking values ('A07', TRUE);
 insert into lugar_parking values ('A08', TRUE);
 
-Triggers 
+
+INSERT INTO registro (nombre_c, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
+VALUES ('Maluma Baby', 'JSY980', current_time,   current_date);

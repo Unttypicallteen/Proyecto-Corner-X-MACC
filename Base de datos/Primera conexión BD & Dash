@@ -2,6 +2,8 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import psycopg2
+from psycopg2 import errors  
+from datetime import datetime
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
@@ -40,21 +42,26 @@ app.layout = html.Div([
 def registrar_entrada(n_clicks, nombre, Placa_Vehiculo):
     if n_clicks > 0:
         insert_query = """
-        INSERT INTO registro (nombre, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
+        INSERT INTO REGISTRO (nombre, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
         VALUES (%s, %s, current_time, current_date)
         """
         try:
             cursor.execute(insert_query, (nombre, Placa_Vehiculo))
             conn.commit()
 
-            # Obtener la hora y la fecha registradas
-            cursor.execute("SELECT current_time, current_date")
-            hora_ingreso, fecha_ingreso = cursor.fetchone()
+            hora_ingreso = datetime.now().strftime("%H:%M:%S")
+            fecha_ingreso = datetime.now().strftime("%Y-%m-%d")
 
             return f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}."
+        
+        except errors.ForeignKeyViolation:
+            conn.rollback()
+            return "Error: El nombre del conductor o la placa del vehículo no están registrados en la base de datos."
+        
         except Exception as e:
             conn.rollback()
             return f"Error al registrar: {str(e)}"
+    
     return "Introduce los datos y presiona 'Registrar Entrada'."
 
 # Ejecutar la aplicación

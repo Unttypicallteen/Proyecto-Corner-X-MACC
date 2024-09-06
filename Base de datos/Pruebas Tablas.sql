@@ -1,5 +1,10 @@
 insert into vehiculo values ('JSY980','Camioneta');
 insert into vehiculo values ('IEN90E','MOTO');
+insert into vehiculo values ('MON210','CARRO');
+insert into vehiculo values ('VAL216','CARRO');
+insert into vehiculo values ('GAB031','CARRO');
+insert into vehiculo values ('SMF666','CARRO');
+insert into vehiculo values ('MAS564','CARRO');
 
 select * from vehiculo
 
@@ -9,6 +14,12 @@ DELETE FROM CONDUCTOR
 
 insert into conductor values ('1011087293','Maluma Baby','JSY980');
 insert into conductor values ('1011087292','Pepito Perez','IEN90E');
+insert into conductor values ('1011087291','Samuel Flores','SMF666');
+insert into conductor values ('1011087294','Gabriela Aldana','GAB031');
+insert into conductor values ('1011087298','Valeria Arce','VAL216');
+insert into conductor values ('1011087297','Santiago Jorigua','MON210');
+insert into conductor values ('1011087299','Mariana Ussa','MAS564');
+
 
 select * from vigilante
 

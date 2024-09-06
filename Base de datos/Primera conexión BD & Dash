@@ -2,7 +2,7 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import psycopg2
-from psycopg2 import errors  
+from psycopg2 import sql
 from datetime import datetime
 
 # Conexión a la base de datos
@@ -39,29 +39,38 @@ app.layout = html.Div([
     State('input-nombre', 'value'),
     State('input-placa', 'value')
 )
-def registrar_entrada(n_clicks, nombre, Placa_Vehiculo):
+def registrar_entrada(n_clicks, nombre_c, Placa_Vehiculo):
     if n_clicks > 0:
-        insert_query = """
-        INSERT INTO REGISTRO (nombre, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
-        VALUES (%s, %s, current_time, current_date)
-        """
         try:
-            cursor.execute(insert_query, (nombre, Placa_Vehiculo))
+            # Verificar si el nombre del conductor y la placa están relacionados
+            query = """
+            SELECT 1 FROM Conductor
+            WHERE nombre = %s AND Placa_Vehiculo = %s
+            """
+            cursor.execute(query, (nombre_c, Placa_Vehiculo))
+            relacion_valida = cursor.fetchone()
+
+            if not relacion_valida:
+                return "Error: El nombre del conductor no está relacionado con la placa del vehículo ingresado."
+
+            # Si la relación es válida, proceder con la inserción
+            insert_query = """
+            INSERT INTO vehiculo (nombre_c, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
+            VALUES (%s, %s, current_time, current_date)
+            """
+            cursor.execute(insert_query, (nombre_c, Placa_Vehiculo))
             conn.commit()
 
+            # Obtener la hora y la fecha actuales
             hora_ingreso = datetime.now().strftime("%H:%M:%S")
             fecha_ingreso = datetime.now().strftime("%Y-%m-%d")
 
-            return f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}."
-        
-        except errors.ForeignKeyViolation:
-            conn.rollback()
-            return "Error: El nombre del conductor o la placa del vehículo no están registrados en la base de datos."
-        
+            return f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre_c} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}."
+
         except Exception as e:
             conn.rollback()
             return f"Error al registrar: {str(e)}"
-    
+
     return "Introduce los datos y presiona 'Registrar Entrada'."
 
 # Ejecutar la aplicación

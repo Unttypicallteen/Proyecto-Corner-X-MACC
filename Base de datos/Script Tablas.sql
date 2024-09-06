@@ -25,14 +25,14 @@ create table Lugar_Parking (
 
 create table registro(
     ID serial,
-	nombre_c varchar(30),
-	Placa_Vehiculo char(6),
+	nombre varchar(30)UNIQUE,
+	Placa_Vehiculo char(6)UNIQUE,
 	lugar_parqueo char(3),
 	hora_ingreso time not null,
 	fecha_ingreso date not null,
 	primary key (id),
 	foreign key (Placa_Vehiculo) references vehiculo(Placa),
-	foreign key (nombre_c) references conductor(nombre),
+	foreign key (nombre) references conductor(nombre),
 	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo)
 
 );

@@ -8,7 +8,7 @@ conn = psycopg2.connect(
     dbname="Proyecto Corner",
     user="postgres",
     password="123456789",
-    host="localhost",  # Cambia esto si tu base de datos está en otro servidor
+    host="localhost",
     port="5432"
 )
 cursor = conn.cursor()
@@ -18,19 +18,15 @@ app = dash.Dash(__name__)
 
 # Diseño de la interfaz de usuario
 app.layout = html.Div([
-    html.H1("Insertar Datos en la Base de Datos"),
-    
-    html.Label("ID:"),
-    dcc.Input(id='input-ID', type='text', value=''),
+    html.H1("Registro de Vehículos al parqueadero"),
 
-    html.Label("Nombre:"),
+    html.Label("Nombre del Conductor:"),
     dcc.Input(id='input-nombre', type='text', value=''),
 
-    html.Label("Placa Vehículo:"),
+    html.Label("Placa del Vehículo:"),
     dcc.Input(id='input-placa', type='text', value=''),
 
-    html.Button('Insertar', id='submit-button', n_clicks=0),
-
+    html.Button('Registrar Entrada', id='submit-button', n_clicks=0),
     html.Div(id='output-message')
 ])
 
@@ -38,25 +34,28 @@ app.layout = html.Div([
 @app.callback(
     Output('output-message', 'children'),
     Input('submit-button', 'n_clicks'),
-    State('input-ID', 'value'),
     State('input-nombre', 'value'),
     State('input-placa', 'value')
 )
-def insertar_datos(n_clicks, ID, nombre, placa):
+def registrar_entrada(n_clicks, nombre, Placa_Vehiculo):
     if n_clicks > 0:
-        # Consulta SQL de inserción
         insert_query = """
-        INSERT INTO conductor (ID, nombre, Placa_Vehiculo)
-        VALUES (%s, %s, %s);
+        INSERT INTO registro (nombre, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
+        VALUES (%s, %s, current_time, current_date)
         """
         try:
-            cursor.execute(insert_query, (ID, nombre, placa))
+            cursor.execute(insert_query, (nombre, Placa_Vehiculo))
             conn.commit()
-            return f"Datos insertados correctamente en la base de datos. El usuario con ID {ID} y nombre {nombre} registró el vehículo con placa {placa}."
+
+            # Obtener la hora y la fecha registradas
+            cursor.execute("SELECT current_time, current_date")
+            hora_ingreso, fecha_ingreso = cursor.fetchone()
+
+            return f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}."
         except Exception as e:
             conn.rollback()
-            return f"Error al insertar datos: {str(e)}"
-    return "Introduce los datos y haz clic en Insertar."
+            return f"Error al registrar: {str(e)}"
+    return "Introduce los datos y presiona 'Registrar Entrada'."
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

@@ -31,14 +31,15 @@ create table registro(
     ID serial,
 	nombre varchar(30)UNIQUE,
 	Placa_Vehiculo char(6)UNIQUE,
+	Tipo_vehiculo Varchar(10),
 	lugar_parqueo char(3),
 	hora_ingreso time not null,
 	fecha_ingreso date not null,
 	primary key (id),
 	foreign key (Placa_Vehiculo) references vehiculo(Placa),
 	foreign key (nombre) references conductor(nombre),
-	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo)
-
+	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo),
+	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
 );
 
 Triggers 
@@ -64,9 +65,11 @@ BEGIN
     -- Asignar el lugar de parqueo encontrado al nuevo registro
     NEW.lugar_parqueo := lugar_disponible;
 
-    -- Marcar el lugar de parqueo como ocupado y actualizar Placa y Tipo_Vehiculo
+    -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
     UPDATE Lugar_Parking
-    SET Disponible = false, Placa = NEW.Placa, Tipo_Vehiculo = NEW.Tipo_Vehiculo
+    SET Disponible = false,
+        placa = NEW.Placa_Vehiculo,
+        Tipo_Vehiculo = NEW.Tipo_Vehiculo
     WHERE lugar_parqueo = lugar_disponible;
 
     RETURN NEW;
@@ -94,6 +97,7 @@ CREATE TRIGGER limpiar_lugar
 AFTER DELETE ON registro
 FOR EACH ROW
 EXECUTE FUNCTION limpiar_lugar_parqueo();
+
 
 
 #Contador  

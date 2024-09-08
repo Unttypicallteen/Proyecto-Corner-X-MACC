@@ -86,6 +86,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+#Contador  
+	
+CREATE VIEW Contador AS select disponible from lugar_parking
+
+select disponible,count(*) from contador where disponible = 'True'  group by disponible 
+
 CREATE TRIGGER limpiar_lugar
 AFTER DELETE ON registro
 FOR EACH ROW

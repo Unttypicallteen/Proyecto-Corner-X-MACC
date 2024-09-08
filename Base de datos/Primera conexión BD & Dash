@@ -2,7 +2,6 @@ import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
 import psycopg2
-from psycopg2 import sql
 from datetime import datetime
 
 # Conexión a la base de datos
@@ -18,19 +17,79 @@ cursor = conn.cursor()
 # Creación de la aplicación Dash
 app = dash.Dash(__name__)
 
-# Diseño de la interfaz de usuario
-app.layout = html.Div([
-    html.H1("Registro de Vehículos al parqueadero"),
+# Diseño de la interfaz de usuario con estilo personalizado
+app.layout = html.Div(
+    style={
+        'font-family': 'Arial, sans-serif',
+        'background-color': '#f7f7f7',
+        'padding': '20px'
+    },
+    children=[
+        html.Div(
+            style={
+                'text-align': 'center',
+                'background-color': '#004d99',
+                'color': 'white',
+                'padding': '10px 0',
+                'border-radius': '8px',
+                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)',
+                'margin-bottom': '20px'
+            },
+            children=[
+                html.H1("Registro de Vehículos", style={'margin': '0'}),
+                html.P("Sistema de control de entrada de parqueadero", style={'margin': '0'})
+            ]
+        ),
+        html.Div(
+            style={
+                'background-color': 'white',
+                'padding': '20px',
+                'border-radius': '8px',
+                'box-shadow': '0 4px 8px rgba(0, 0, 0, 0.1)'
+            },
+            children=[
+                html.Label("Nombre del Conductor:", style={'font-weight': 'bold'}),
+                dcc.Input(id='input-nombre', type='text', value='', style={'width': '100%', 'padding': '10px', 'margin-bottom': '10px'}),
 
-    html.Label("Nombre del Conductor:"),
-    dcc.Input(id='input-nombre', type='text', value=''),
+                html.Label("Placa del Vehículo:", style={'font-weight': 'bold'}),
+                dcc.Input(id='input-placa', type='text', value='', style={'width': '100%', 'padding': '10px', 'margin-bottom': '10px'}),
 
-    html.Label("Placa del Vehículo:"),
-    dcc.Input(id='input-placa', type='text', value=''),
+                html.Button('Registrar Entrada', id='submit-button', n_clicks=0, 
+                            style={
+                                'background-color': '#004d99', 
+                                'color': 'white', 
+                                'padding': '10px 20px', 
+                                'border': 'none', 
+                                'border-radius': '4px',
+                                'cursor': 'pointer',
+                                'width': '100%'
+                            }),
 
-    html.Button('Registrar Entrada', id='submit-button', n_clicks=0),
-    html.Div(id='output-message')
-])
+                html.Div(id='output-message', style={'margin-top': '20px'})
+            ]
+        ),
+        # Contador de vehículos
+        html.Div(
+            style={
+                'text-align': 'center',
+                'margin-top': '30px'
+            },
+            children=[
+                html.H2("Cupos disponibles en el Parqueadero", style={'color': '#004d99'}),
+                html.Div(id='contador-vehiculos', style={
+                    'font-size': '5em',  # Tamaño de fuente más grande
+                    'color': '#333',
+                    'font-weight': 'bold'
+                })
+            ]
+        ),
+        dcc.Interval(
+            id='interval-component',
+            interval=1*1000,  # Intervalo en milisegundos (cada 1 segundo)
+            n_intervals=0
+        )
+    ]
+)
 
 # Callback para insertar datos en la base de datos
 @app.callback(
@@ -39,7 +98,7 @@ app.layout = html.Div([
     State('input-nombre', 'value'),
     State('input-placa', 'value')
 )
-def registrar_entrada(n_clicks, nombre_c, Placa_Vehiculo):
+def registrar_entrada(n_clicks, nombre, Placa_Vehiculo):
     if n_clicks > 0:
         try:
             # Verificar si el nombre del conductor y la placa están relacionados
@@ -47,31 +106,51 @@ def registrar_entrada(n_clicks, nombre_c, Placa_Vehiculo):
             SELECT 1 FROM Conductor
             WHERE nombre = %s AND Placa_Vehiculo = %s
             """
-            cursor.execute(query, (nombre_c, Placa_Vehiculo))
+            cursor.execute(query, (nombre, Placa_Vehiculo))
             relacion_valida = cursor.fetchone()
 
             if not relacion_valida:
-                return "Error: El nombre del conductor no está relacionado con la placa del vehículo ingresado."
+                return html.Div("Error: El nombre del conductor no está relacionado con la placa del vehículo ingresado.",
+                                style={'color': 'red'})
 
             # Si la relación es válida, proceder con la inserción
             insert_query = """
-            INSERT INTO vehiculo (nombre_c, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
+            INSERT INTO REGISTRO (nombre, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
             VALUES (%s, %s, current_time, current_date)
             """
-            cursor.execute(insert_query, (nombre_c, Placa_Vehiculo))
+            cursor.execute(insert_query, (nombre, Placa_Vehiculo))
             conn.commit()
 
             # Obtener la hora y la fecha actuales
             hora_ingreso = datetime.now().strftime("%H:%M:%S")
             fecha_ingreso = datetime.now().strftime("%Y-%m-%d")
 
-            return f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre_c} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}."
+            return html.Div(f"Vehículo registrado con éxito: \nEl usuario con nombre {nombre} ingresó el vehículo con placa {Placa_Vehiculo} a las {hora_ingreso} en la fecha {fecha_ingreso}.",
+                            style={'color': 'green'})
 
         except Exception as e:
             conn.rollback()
-            return f"Error al registrar: {str(e)}"
+            return html.Div(f"Error al registrar: {str(e)}", style={'color': 'red'})
 
     return "Introduce los datos y presiona 'Registrar Entrada'."
+
+# Callback para actualizar el contador
+@app.callback(
+    Output('contador-vehiculos', 'children'),
+    Input('interval-component', 'n_intervals')
+)
+def update_contador(n):
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM Contador 
+        WHERE disponible = 'True'
+    """)
+    disponible_count = cursor.fetchone()[0]
+    
+    # Convertir el número en un formato de contador similar a un display de 7 segmentos
+    contador_display = f"{disponible_count:03}"  # Mostrando siempre 3 dígitos
+    
+    return contador_display
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

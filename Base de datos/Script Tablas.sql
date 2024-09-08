@@ -19,8 +19,12 @@ create table vigilante(
 
 create table Lugar_Parking (
     lugar_parqueo char(3),
-	Disponible boolean not null, 
-    primary key (lugar_parqueo)
+	Disponible boolean not null,
+	Placa char(6),
+	Tipo_Vehiculo Varchar(10), 
+    primary key (lugar_parqueo),
+	foreign key (Placa) references vehiculo(Placa),
+	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
 );
 
 create table registro(
@@ -86,13 +90,13 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE TRIGGER limpiar_lugar
+AFTER DELETE ON registro
+FOR EACH ROW
+EXECUTE FUNCTION limpiar_lugar_parqueo();
+
 #Contador  
 	
 CREATE VIEW Contador AS select disponible from lugar_parking
 
 select disponible,count(*) from contador where disponible = 'True'  group by disponible 
-
-CREATE TRIGGER limpiar_lugar
-AFTER DELETE ON registro
-FOR EACH ROW
-EXECUTE FUNCTION limpiar_lugar_parqueo();

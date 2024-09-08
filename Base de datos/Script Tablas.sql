@@ -64,9 +64,9 @@ BEGIN
     -- Asignar el lugar de parqueo encontrado al nuevo registro
     NEW.lugar_parqueo := lugar_disponible;
 
-    -- Marcar el lugar de parqueo como ocupado
+    -- Marcar el lugar de parqueo como ocupado y actualizar Placa y Tipo_Vehiculo
     UPDATE Lugar_Parking
-    SET Disponible = false
+    SET Disponible = false, Placa = NEW.Placa, Tipo_Vehiculo = NEW.Tipo_Vehiculo
     WHERE lugar_parqueo = lugar_disponible;
 
     RETURN NEW;
@@ -81,9 +81,9 @@ EXECUTE FUNCTION asignar_lugar_parqueo();
 CREATE OR REPLACE FUNCTION limpiar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Marcar el lugar de parqueo como disponible
+    -- Marcar el lugar de parqueo como disponible y limpiar Placa y Tipo_Vehiculo
     UPDATE Lugar_Parking
-    SET Disponible = true
+    SET Disponible = true, Placa = NULL, Tipo_Vehiculo = NULL
     WHERE lugar_parqueo = OLD.lugar_parqueo;
 
     RETURN OLD;
@@ -94,6 +94,7 @@ CREATE TRIGGER limpiar_lugar
 AFTER DELETE ON registro
 FOR EACH ROW
 EXECUTE FUNCTION limpiar_lugar_parqueo();
+
 
 #Contador  
 	

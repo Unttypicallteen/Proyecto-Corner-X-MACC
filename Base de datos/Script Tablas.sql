@@ -66,6 +66,7 @@ CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 DECLARE
     lugar_disponible CHAR(3);
+    camionetas_vecinas INT;
 BEGIN
     -- Seleccionar un lugar de parqueo disponible
     SELECT lugar_parqueo INTO lugar_disponible
@@ -74,10 +75,28 @@ BEGIN
     ORDER BY RANDOM()
     LIMIT 1
     FOR UPDATE;
-    
-    -- Verificar si hay un lugar disponible
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'No hay lugares de parqueo disponibles';
+
+    -- Verificar si hay camionetas en los lugares vecinos inmediatos del mismo piso
+    SELECT COUNT(*) INTO camionetas_vecinas
+    FROM Lugar_Parking
+    WHERE lugar_parqueo IN (
+        -- Buscar los lugares anteriores y siguientes del lugar seleccionado
+        (SELECT lugar_parqueo 
+         FROM Lugar_Parking 
+         WHERE lugar_parqueo < lugar_disponible
+         ORDER BY lugar_parqueo DESC
+         LIMIT 2),
+        (SELECT lugar_parqueo 
+         FROM Lugar_Parking 
+         WHERE lugar_parqueo > lugar_disponible
+         ORDER BY lugar_parqueo ASC
+         LIMIT 2)
+    ) 
+    AND Tipo_Vehiculo = 'camioneta';
+
+    -- Si ya hay 2 camionetas consecutivas, bloquear la asignación
+    IF camionetas_vecinas >= 2 AND NEW.Tipo_Vehiculo = 'camioneta' THEN
+        RAISE EXCEPTION 'No se pueden estacionar más de 2 camionetas consecutivas en el piso.';
     END IF;
 
     -- Asignar el lugar de parqueo encontrado al nuevo registro
@@ -93,6 +112,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 CREATE TRIGGER before_insert_registro
 BEFORE INSERT ON registro

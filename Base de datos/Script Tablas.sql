@@ -66,7 +66,8 @@ CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 DECLARE
     lugar_disponible CHAR(3);
-    camionetas_vecinas INT;
+    camionetas_izquierda INT;
+    camionetas_derecha INT;
 BEGIN
     -- Seleccionar un lugar de parqueo disponible
     SELECT lugar_parqueo INTO lugar_disponible
@@ -76,26 +77,32 @@ BEGIN
     LIMIT 1
     FOR UPDATE;
 
-    -- Verificar si hay camionetas en los lugares vecinos inmediatos del mismo piso
-    SELECT COUNT(*) INTO camionetas_vecinas
+    -- Verificar cuántas camionetas están a la izquierda del lugar seleccionado
+    SELECT COUNT(*) INTO camionetas_izquierda
     FROM Lugar_Parking
     WHERE lugar_parqueo IN (
-        -- Buscar los lugares anteriores y siguientes del lugar seleccionado
-        (SELECT lugar_parqueo 
-         FROM Lugar_Parking 
-         WHERE lugar_parqueo < lugar_disponible
-         ORDER BY lugar_parqueo DESC
-         LIMIT 2),
-        (SELECT lugar_parqueo 
-         FROM Lugar_Parking 
-         WHERE lugar_parqueo > lugar_disponible
-         ORDER BY lugar_parqueo ASC
-         LIMIT 2)
-    ) 
+        SELECT lugar_parqueo 
+        FROM Lugar_Parking 
+        WHERE lugar_parqueo < lugar_disponible
+        ORDER BY lugar_parqueo DESC
+        LIMIT 2
+    )
     AND Tipo_Vehiculo = 'camioneta';
 
-    -- Si ya hay 2 camionetas consecutivas, bloquear la asignación
-    IF camionetas_vecinas >= 2 AND NEW.Tipo_Vehiculo = 'camioneta' THEN
+    -- Verificar cuántas camionetas están a la derecha del lugar seleccionado
+    SELECT COUNT(*) INTO camionetas_derecha
+    FROM Lugar_Parking
+    WHERE lugar_parqueo IN (
+        SELECT lugar_parqueo 
+        FROM Lugar_Parking 
+        WHERE lugar_parqueo > lugar_disponible
+        ORDER BY lugar_parqueo ASC
+        LIMIT 2
+    )
+    AND Tipo_Vehiculo = 'camioneta';
+
+    -- Si el total de camionetas consecutivas (izquierda + derecha) es 2 o más, bloquear la asignación
+    IF (camionetas_izquierda + camionetas_derecha) >= 2 AND NEW.Tipo_Vehiculo = 'camioneta' THEN
         RAISE EXCEPTION 'No se pueden estacionar más de 2 camionetas consecutivas en el piso.';
     END IF;
 
@@ -112,7 +119,6 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 
 CREATE TRIGGER before_insert_registro
 BEFORE INSERT ON registro

@@ -42,6 +42,24 @@ create table registro(
 	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
 );
 
+create table historial_Registro(
+    ID serial,
+	nombre varchar(30)UNIQUE,
+	Placa_Vehiculo char(6)UNIQUE,
+	Tipo_vehiculo Varchar(10),
+	lugar_parqueo char(3),
+	hora_ingreso time not null,
+	fecha_ingreso date not null,
+	hora_salida time not null,
+	fecha_salida date not null,
+	primary key (id),
+	foreign key (Placa_Vehiculo) references vehiculo(Placa),
+	foreign key (nombre) references conductor(nombre),
+	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo),
+	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
+);
+
+
 Triggers 
 
 CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()

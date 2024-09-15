@@ -102,10 +102,18 @@ EXECUTE FUNCTION asignar_lugar_parqueo();
 CREATE OR REPLACE FUNCTION limpiar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Marcar el lugar de parqueo como disponible y limpiar Placa y Tipo_Vehiculo
+    -- Actualizar la tabla Lugar_Parking para marcar el lugar como disponible y limpiar los datos del vehículo
     UPDATE Lugar_Parking
     SET Disponible = true, Placa = NULL, Tipo_Vehiculo = NULL
     WHERE lugar_parqueo = OLD.lugar_parqueo;
+
+    -- Eliminar el vehículo de la tabla Vehiculos_En_Parqueadero
+    DELETE FROM registro
+    WHERE placa_vehiculo = OLD.Placa_Vehiculo;
+
+    -- Insertar un registro en la tabla Historial_Parqueadero con la hora de salida
+    INSERT INTO historial_registro (nombre,Placa_Vehiculo, Tipo_Vehiculo, lugar_parqueo, hora_ingreso, fecha_ingreso, hora_salida, fecha_salida)
+    VALUES (old.nombre,OLD.Placa_Vehiculo, OLD.Tipo_Vehiculo, OLD.lugar_parqueo, OLD.hora_ingreso, OLD.fecha_ingreso, current_time, current_date);
 
     RETURN OLD;
 END;

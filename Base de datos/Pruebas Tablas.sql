@@ -11,6 +11,8 @@ insert into vehiculo values ('ABC124','Camioneta');
 insert into vehiculo values ('ABC125','Camioneta');
 insert into vehiculo values ('ABC126','Camioneta');
 insert into vehiculo values ('ABC127','Camioneta');
+insert into vehiculo values ('OCT240','Camioneta');
+
 
 
 select * from vehiculo
@@ -32,6 +34,7 @@ insert into conductor values ('1022556622','Feid','ABC124');
 insert into conductor values ('1022556623','Morat','ABC125');
 insert into conductor values ('1022556625','Alvaro Diaz','ABC126');
 insert into conductor values ('1022556626','Myke Towers','ABC127');
+insert into conductor values ('1030254862','Mariana Sierra','OCT240');
 
 
 select * from vigilante

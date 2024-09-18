@@ -20,10 +20,11 @@ cursor = conn.cursor()
 # Creación de la aplicación Dash
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
-consulta = "Select * from Registro"
+# Consulta para obtener los registros
+consulta = "SELECT * FROM Registro"
 cursor.execute(consulta)
 rows_registro = cursor.fetchall()
-df_pais = pd.DataFrame(rows_registro, columns=['id', 'nombre', 'placa_vehiculo','tipo_vehiculo','lugar_parqueo','hora_ingreso','fecha_ingreso'])
+df_r = pd.DataFrame(rows_registro, columns=['ID', 'Nombre del Conductor', 'Placa de Vehiculo', 'Tipo del Vehiculo', 'Lugar Asignado', 'Hora de Ingreso', 'Fecha de Ingreso'])
 
 # Estilos de los botones del menú
 button_style = {
@@ -36,7 +37,7 @@ button_style = {
     'cursor': 'pointer',
     'width': '250px',
     'font-size': '1.2em',
-    'transition': 'transform 0.3s',
+    'transition': 'transform 0.5s',
 }
 
 # Página principal con enlaces a las otras páginas
@@ -48,9 +49,19 @@ app.layout = html.Div(
         'padding': '50px'
     },
     children=[
-        html.H1("Sistema de registro Automático de Parqueadero ", style={'color': '#333'}),
-        html.P("Seleccione una opción del menú", style={'color': '#666'}),
-
+        html.H1("Sistema de registro Automático de Parqueadero ", style={'font-size': '4em','color': '#333','font-weight': 'bold'}),
+        html.H2("Seleccione una opción del menú", style={'font-size': '3em','color': '#333','font-weight': 'bold'}),
+        html.A("Cupos Disponibles", style={'font-size': '2em','color': '#333','font-weight': 'bold'}),
+                    html.Div(id='contador-vehiculos', style={
+                        'font-size': '2em',
+                        'color': '#333',
+                        'font-weight': 'bold'
+                    }),
+                    dcc.Interval(
+                        id='interval-component',
+                        interval=1*1000,  # Actualiza cada 1 segundo
+                        n_intervals=0
+                    ),
         html.Div(
             children=[
                 html.A(
@@ -69,6 +80,7 @@ app.layout = html.Div(
                     html.Button('Cámaras de Seguridad', style=button_style),
                     href='/page-4',
                 ),
+
             ],
             style={'display': 'flex', 'justify-content': 'center'}
         ),
@@ -159,22 +171,37 @@ page_2_layout = html.Div(
     ]
 )
 
-# Página 3: Cupos Disponibles
+# Página 3: Historial Registros
 page_3_layout = html.Div(
     children=[
         html.H2("Historial de registro", style={'color': '#004d99'}),
-        """"html.Div(id='contador-vehiculos', style={
-            'font-size': '5em',
-            'color': '#333',
-            'font-weight': 'bold'
-        }),
-        dcc.Interval(
-            id='interval-component',
-            interval=1*1000,  # Actualiza cada 1 segundo
-            n_intervals=0
-        )"""""
+        dbc.Container([
+            dash_table.DataTable(
+                data=df_r.to_dict('records'),  # Se pasa el contenido del DataFrame
+                columns=[{"name": col, "id": col} for col in df_r.columns],  # Los nombres de las columnas
+                id='tbl',
+                style_data={'color': 'black', 'backgroundColor': 'white'},
+                style_header={
+                    'border': '1px solid black',
+                    'backgroundColor': 'rgb(210, 210, 210)',
+                    'color': 'black',
+                    'fontWeight': 'bold'
+                },
+                style_data_conditional=[{
+                    'if': {'row_index': 'odd'},
+                    'backgroundColor': 'rgb(220, 220, 220)',
+                }],
+                style_cell={
+                    'fontSize': 20,
+                    'font-family': 'sans-serif',
+                    'border': '1px solid grey'
+                }
+            ),
+            dbc.Alert(id='tbl_out'),
+        ])
     ]
 )
+
 
 # Página 4: Cámaras de Seguridad
 page_4_layout = html.Div(
@@ -297,6 +324,7 @@ def registrar_salida(n_clicks, Placa_Vehiculo,Tipo_Vehiculo):
                             style={'color': 'green'})      
         except Exception as e:
             return html.Div(f"Error: {str(e)}", style={'color': 'red'})
+    
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

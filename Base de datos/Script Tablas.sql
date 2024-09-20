@@ -59,62 +59,41 @@ create table historial_Registro(
 );
 
 
-Triggers 
-
 CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 DECLARE
-    lugar_disponible CHAR(3);
-    camionetas_izquierda INT;
-    camionetas_derecha INT;
+    lugar_izq CHAR(3);
+    lugar_der CHAR(3);
+    camionetas_consecutivas INT := 0;
 BEGIN
-    -- Seleccionar un lugar de parqueo disponible
-    SELECT lugar_parqueo INTO lugar_disponible
-    FROM Lugar_Parking
-    WHERE Disponible = true
-    ORDER BY RANDOM()
-    LIMIT 1
-    FOR UPDATE;
+    -- Obtener los lugares a la izquierda y derecha del lugar que se está asignando
+    lugar_izq := NEW.lugar_p_izq;
+    lugar_der := NEW.lugar_p_der;
 
-    -- Verificar cuántas camionetas están a la izquierda del lugar seleccionado
-    SELECT COUNT(*) INTO camionetas_izquierda
-    FROM Lugar_Parking
-    WHERE lugar_parqueo IN (
-        SELECT lugar_parqueo 
-        FROM Lugar_Parking 
-        WHERE lugar_parqueo < lugar_disponible
-        ORDER BY lugar_parqueo DESC
-        LIMIT 2
-    )
-    AND Tipo_Vehiculo = 'camioneta';
-
-    -- Verificar cuántas camionetas están a la derecha del lugar seleccionado
-    SELECT COUNT(*) INTO camionetas_derecha
-    FROM Lugar_Parking
-    WHERE lugar_parqueo IN (
-        SELECT lugar_parqueo 
-        FROM Lugar_Parking 
-        WHERE lugar_parqueo > lugar_disponible
-        ORDER BY lugar_parqueo ASC
-        LIMIT 2
-    )
-    AND Tipo_Vehiculo = 'camioneta';
-
-    -- Si el total de camionetas consecutivas (izquierda + derecha) es 2 o más, bloquear la asignación
-    IF (camionetas_izquierda + camionetas_derecha) >= 2 AND NEW.Tipo_Vehiculo = 'camioneta' THEN
-        RAISE EXCEPTION 'No se pueden estacionar más de 2 camionetas consecutivas en el piso.';
+    -- Contar camionetas consecutivas a la izquierda
+    IF lugar_izq IS NOT NULL THEN
+        SELECT COUNT(*)
+        INTO camionetas_consecutivas
+        FROM Lugar_Parking
+        WHERE lugar_parqueo = lugar_izq
+        AND Tipo_Vehiculo = 'camioneta';
     END IF;
 
-    -- Asignar el lugar de parqueo encontrado al nuevo registro
-    NEW.lugar_parqueo := lugar_disponible;
+    -- Contar camionetas consecutivas a la derecha
+    IF lugar_der IS NOT NULL THEN
+        SELECT camionetas_consecutivas + COUNT(*)
+        INTO camionetas_consecutivas
+        FROM Lugar_Parking
+        WHERE lugar_parqueo = lugar_der
+        AND Tipo_Vehiculo = 'camioneta';
+    END IF;
 
-    -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
-    UPDATE Lugar_Parking
-    SET Disponible = false,
-        placa = NEW.Placa_Vehiculo,
-        Tipo_Vehiculo = NEW.Tipo_Vehiculo
-    WHERE lugar_parqueo = lugar_disponible;
+    -- Si ya hay dos camionetas consecutivas, impedir la asignación de una tercera
+    IF camionetas_consecutivas >= 2 AND NEW.Tipo_Vehiculo = 'camioneta' THEN
+        RAISE EXCEPTION 'No se pueden estacionar más de 2 camionetas consecutivas.';
+    END IF;
 
+    -- Si todo está bien, continuar con la inserción
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

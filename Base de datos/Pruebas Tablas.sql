@@ -15,11 +15,6 @@ insert into vehiculo values ('OCT240','Camioneta');
 
 
 
-select * from vehiculo
-
-select * from Conductor
-
-DELETE FROM CONDUCTOR
 
 insert into conductor values ('1011087293','Maluma Baby','JSY980');
 insert into conductor values ('1011087292','Pepito Perez','IEN90E');
@@ -37,30 +32,24 @@ insert into conductor values ('1022556626','Myke Towers','ABC127');
 insert into conductor values ('1030254862','Mariana Sierra','OCT240');
 
 
-select * from vigilante
+
 
 insert into vigilante values ('1234','Pepito Perez');
 insert into vigilante values ('1235','Pepita Perez');
 
-select * from lugar_parking 
 
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A01', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A02', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A03', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A04', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A05', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A06', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A07', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A08', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A09', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A10', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A11', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A12', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A13', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A14', TRUE);
-INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES ('A15', TRUE);
-
-
-
-INSERT INTO registro (nombre_c, Placa_Vehiculo, hora_ingreso, fecha_ingreso)
-VALUES ('Maluma Baby', 'JSY980', current_time,   current_date);
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_der) VALUES ('A01', TRUE,'A02');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A02', TRUE,'A01','A03');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A03', TRUE,'A02','A04');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A04', TRUE,'A03','A05');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A05', TRUE,'A04','A06');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A06', TRUE,'A05','A07');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A07', TRUE,'A06','A08');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A08', TRUE,'A07','A09');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A09', TRUE,'A08','A10');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A10', TRUE,'A09','A11');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A11', TRUE,'A10','A12');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A12', TRUE,'A11','A13');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A13', TRUE,'A12','A14');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A14', TRUE,'A13','A15');
+INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq) VALUES ('A15', TRUE,'A14');

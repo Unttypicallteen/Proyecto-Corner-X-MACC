@@ -21,7 +21,9 @@ create table Lugar_Parking (
     lugar_parqueo char(3),
 	Disponible boolean not null,
 	Placa char(6),
-	Tipo_Vehiculo Varchar(10), 
+	Tipo_Vehiculo Varchar(10),
+	lugar_p_izq char(3),
+	lugar_p_der char(3),
     primary key (lugar_parqueo),
 	foreign key (Placa) references vehiculo(Placa),
 	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
@@ -41,6 +43,7 @@ create table registro(
 	foreign key (lugar_parqueo) references Lugar_Parking(lugar_parqueo),
 	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
 );
+
 
 create table historial_Registro(
     ID serial,

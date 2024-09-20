@@ -1,10 +1,10 @@
 insert into vehiculo values ('JSY980','Camioneta');
-insert into vehiculo values ('IEN90E','MOTO');
-insert into vehiculo values ('MON210','CARRO');
-insert into vehiculo values ('VAL216','CARRO');
-insert into vehiculo values ('GAB031','CARRO');
-insert into vehiculo values ('SMF666','CARRO');
-insert into vehiculo values ('MAS564','CARRO');
+insert into vehiculo values ('IEN90E','Moto');
+insert into vehiculo values ('MON210','Camioneta');
+insert into vehiculo values ('VAL216','Camioneta');
+insert into vehiculo values ('GAB031','Carro');
+insert into vehiculo values ('SMF666','Carro');
+insert into vehiculo values ('MAS564','Carro');
 insert into vehiculo values ('JAJ172','Moto');
 insert into vehiculo values ('ABC123','Camioneta');
 insert into vehiculo values ('ABC124','Camioneta');

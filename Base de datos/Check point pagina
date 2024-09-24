@@ -9,7 +9,7 @@ import dash_bootstrap_components as dbc
 
 # Conexión a la base de datos
 conn = psycopg2.connect(
-    dbname="Proyecto Corner ",
+    dbname="Proyecto Corner",
     user="postgres",
     password="123456789",
     host="localhost",

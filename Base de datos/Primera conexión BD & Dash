@@ -175,11 +175,20 @@ page_2_layout = html.Div(
 page_3_layout = html.Div(
     children=[
         html.H2("Historial de registro", style={'color': '#004d99'}),
+        html.Div(id='contador-vehiculos', style={
+            'font-size': '5em',
+            'color': '#333',
+            'font-weight': 'bold'
+        }),
+        dcc.Interval(
+            id='interval-component-history',
+            interval=1*1000,  # Actualiza cada 1 segundo
+            n_intervals=0
+        ),
         dbc.Container([
             dash_table.DataTable(
-                data=df_r.to_dict('records'),  # Se pasa el contenido del DataFrame
-                columns=[{"name": col, "id": col} for col in df_r.columns],  # Los nombres de las columnas
-                id='tbl',
+                id='tbl-history',
+                columns=[{"name": col, "id": col} for col in df_r.columns],  # Define las columnas
                 style_data={'color': 'black', 'backgroundColor': 'white'},
                 style_header={
                     'border': '1px solid black',
@@ -201,6 +210,17 @@ page_3_layout = html.Div(
         ])
     ]
 )
+
+# Callback para actualizar el DataTable con los últimos registros
+@app.callback(
+    Output('tbl-history', 'data'),
+    [Input('interval-component-history', 'n_intervals')]
+)
+def update_table(n):
+    cursor.execute("SELECT * FROM Registro")
+    rows_registro = cursor.fetchall()
+    df_r = pd.DataFrame(rows_registro, columns=['ID', 'Nombre del Conductor', 'Placa de Vehiculo', 'Tipo del Vehiculo', 'Lugar Asignado', 'Hora de Ingreso', 'Fecha de Ingreso'])
+    return df_r.to_dict('records')  # Actualiza los datos en el DataTable
 
 
 # Página 4: Cámaras de Seguridad
@@ -311,6 +331,8 @@ def registrar_salida(n_clicks, Placa_Vehiculo,Tipo_Vehiculo):
             WHERE Placa_Vehiculo = %s
             """
             cursor.execute(query, (Placa_Vehiculo,))
+
+            conn.commit()
 
             # Obtener la hora y la fecha actuales
             hora_salida = datetime.now().strftime("%H:%M:%S")

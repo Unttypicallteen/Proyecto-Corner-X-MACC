@@ -38,18 +38,26 @@ insert into vigilante values ('1234','Pepito Perez');
 insert into vigilante values ('1235','Pepita Perez');
 
 
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_der) VALUES ('A01', TRUE,'A02');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A02', TRUE,'A01','A03');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A03', TRUE,'A02','A04');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A04', TRUE,'A03','A05');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A05', TRUE,'A04','A06');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A06', TRUE,'A05','A07');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A07', TRUE,'A06','A08');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A08', TRUE,'A07','A09');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A09', TRUE,'A08','A10');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A10', TRUE,'A09','A11');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A11', TRUE,'A10','A12');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A12', TRUE,'A11','A13');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A13', TRUE,'A12','A14');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq,lugar_p_der) VALUES ('A14', TRUE,'A13','A15');
-INSERT INTO lugar_parking (lugar_parqueo, disponible,lugar_p_izq) VALUES ('A15', TRUE,'A14');
+-- Inserciones para el piso A
+INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES
+('A01', TRUE), ('A02', TRUE), ('A03', TRUE), ('A04', TRUE), ('A05', TRUE),
+('A06', TRUE), ('A07', TRUE), ('A08', TRUE), ('A09', TRUE), ('A10', TRUE),
+('A11', TRUE), ('A12', TRUE), ('A13', TRUE), ('A14', TRUE), ('A15', TRUE);
+
+-- Inserciones para el piso B
+INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES
+('B01', TRUE), ('B02', TRUE), ('B03', TRUE), ('B04', TRUE), ('B05', TRUE),
+('B06', TRUE), ('B07', TRUE), ('B08', TRUE), ('B09', TRUE), ('B10', TRUE),
+('B11', TRUE), ('B12', TRUE), ('B13', TRUE), ('B14', TRUE), ('B15', TRUE);
+
+-- Inserciones para el piso C
+INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES
+('C01', TRUE), ('C02', TRUE), ('C03', TRUE), ('C04', TRUE), ('C05', TRUE),
+('C06', TRUE), ('C07', TRUE), ('C08', TRUE), ('C09', TRUE), ('C10', TRUE),
+('C11', TRUE), ('C12', TRUE), ('C13', TRUE), ('C14', TRUE), ('C15', TRUE);
+
+-- Inserciones para el piso D
+INSERT INTO lugar_parking (lugar_parqueo, disponible) VALUES
+('D01', TRUE), ('D02', TRUE), ('D03', TRUE), ('D04', TRUE), ('D05', TRUE),
+('D06', TRUE), ('D07', TRUE), ('D08', TRUE), ('D09', TRUE), ('D10', TRUE),
+('D11', TRUE), ('D12', TRUE), ('D13', TRUE), ('D14', TRUE), ('D15', TRUE);

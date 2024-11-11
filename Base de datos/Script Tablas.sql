@@ -17,17 +17,15 @@ create table vigilante(
     primary key(id)
 );
 
-create table Lugar_Parking (
-    lugar_parqueo char(3),
-	Disponible boolean not null,
-	Placa char(6),
-	Tipo_Vehiculo Varchar(10),
-	lugar_p_izq char(3),
-	lugar_p_der char(3),
-    primary key (lugar_parqueo),
-	foreign key (Placa) references vehiculo(Placa),
-	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
+CREATE TABLE Lugar_Parking (
+    lugar_parqueo CHAR(3) PRIMARY KEY,
+    Disponible BOOLEAN NOT NULL,
+    Placa CHAR(6),
+    Tipo_Vehiculo VARCHAR(10),
+	 FOREIGN KEY (Placa) REFERENCES vehiculo(Placa),
+	 CHECK (Tipo_Vehiculo IN ('Moto', 'Carro', 'Camioneta'))
 );
+
 
 create table registro(
     ID serial,
@@ -44,6 +42,13 @@ create table registro(
 	check (lower(Tipo_Vehiculo) in ('moto', 'carro', 'camioneta'))
 );
 
+Create table rol (
+nombre varchar(30) unique,
+	contraseña varchar(6),
+	rol varchar(10),
+	primary key (nombre)
+	CHECK (rol IN ('Usuario', 'Vigilante')
+);
 
 create table historial_Registro(
     ID serial,
@@ -55,7 +60,7 @@ create table historial_Registro(
 	fecha_ingreso date not null,
 	hora_salida time not null,
 	fecha_salida date not null,
-	primary key (id),
+	primary key (id)
 );
 
 CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()

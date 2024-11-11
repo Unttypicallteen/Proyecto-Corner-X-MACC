@@ -62,38 +62,63 @@ CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 DECLARE
     lugar_disponible CHAR(3);
+    piso CHAR(1);
+    pisos TEXT[] := ARRAY['A', 'B', 'C', 'D', 'E'];  -- Array con los pisos
 BEGIN
     -- Bucle para seguir buscando lugar hasta encontrar uno que cumpla las condiciones
     LOOP
-        -- Seleccionar un lugar de parqueo disponible que sea impar
-        SELECT lugar_parqueo INTO lugar_disponible
-        FROM Lugar_Parking
-        WHERE Disponible = true
-          AND (NEW.Tipo_Vehiculo != 'camioneta' OR (CAST(lugar_parqueo AS INTEGER) % 2 = 1))  -- Solo asignar a lugares impares si es una camioneta
-        ORDER BY RANDOM()
-        LIMIT 1
-        FOR UPDATE;
+        -- Iterar sobre los pisos en orden de prioridad
+        FOREACH piso IN ARRAY pisos LOOP
+            -- Si es camioneta, buscamos lugares impares en el piso actual
+            IF NEW.Tipo_Vehiculo = 'Camioneta' THEN
+                -- Buscar un lugar impar disponible en el piso actual
+                SELECT lugar_parqueo INTO lugar_disponible
+                FROM Lugar_Parking
+                WHERE Disponible = true
+                  AND lugar_parqueo LIKE piso || '%'
+                  AND (CAST(SUBSTRING(lugar_parqueo FROM 2) AS INTEGER) % 2 = 1)  -- Solo lugares impares
+                ORDER BY RANDOM()
+                LIMIT 1
+                FOR UPDATE;
+
+                -- Si no se encuentra un lugar impar en el piso actual, buscar en el siguiente piso
+                IF NOT FOUND THEN
+                    CONTINUE;  -- Pasa al siguiente piso
+                END IF;
+            ELSE
+                -- Si no es camioneta, buscamos cualquier lugar disponible en el piso actual
+                SELECT lugar_parqueo INTO lugar_disponible
+                FROM Lugar_Parking
+                WHERE Disponible = true
+                  AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
+                ORDER BY RANDOM()
+                LIMIT 1
+                FOR UPDATE;
+                
+                -- Si encontramos un lugar disponible, salimos del bucle
+                IF FOUND THEN
+                    EXIT;
+                END IF;
+            END IF;
+        END LOOP;
 
         -- Si no se encuentra un lugar disponible, lanzar una excepción
         IF NOT FOUND THEN
             RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
         END IF;
 
-        -- Salir del bucle si se encuentra un lugar disponible
-        EXIT;
+        -- Asignar el lugar disponible al nuevo registro
+        NEW.lugar_parqueo := lugar_disponible;
+
+        -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
+        UPDATE Lugar_Parking
+        SET Disponible = false,
+            Placa = NEW.Placa_Vehiculo,  -- Cambia "Placa" por el nombre correcto en la tabla Lugar_Parking
+            Tipo_Vehiculo = NEW.Tipo_Vehiculo  -- Asegúrate de que "Tipo_Vehiculo" existe en la tabla Lugar_Parking
+        WHERE lugar_parqueo = NEW.lugar_parqueo;
+
+        RETURN NEW;
     END LOOP;
-
-    -- Asignar el lugar disponible al nuevo registro
-    NEW.lugar_parqueo := lugar_disponible;
-
-    -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
-    UPDATE Lugar_Parking
-    SET Disponible = false,
-        Placa = NEW.Placa_Vehiculo,  -- Cambia "Placa" por el nombre correcto en la tabla vehiculo
-        Tipo_Vehiculo = NEW.Tipo_Vehiculo  -- Asegúrate de que "Tipo_Vehiculo" existe en la tabla vehiculo
-    WHERE lugar_parqueo = NEW.lugar_parqueo;
-
-    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 

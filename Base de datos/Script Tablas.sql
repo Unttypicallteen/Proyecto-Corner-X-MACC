@@ -58,8 +58,8 @@ create table historial_Registro(
 	lugar_parqueo char(3),
 	hora_ingreso time not null,
 	fecha_ingreso date not null,
-	hora_salida time not null,
-	fecha_salida date not null,
+	hora_salida time ,
+	fecha_salida date ,
 	primary key (id)
 );
 
@@ -71,62 +71,63 @@ DECLARE
     pisos TEXT[] := ARRAY['A', 'B', 'C', 'D', 'E'];  -- Array con los pisos
 BEGIN
     -- Bucle para seguir buscando lugar hasta encontrar uno que cumpla las condiciones
-    LOOP
-        -- Iterar sobre los pisos en orden de prioridad
-        FOREACH piso IN ARRAY pisos LOOP
-            -- Si es camioneta, buscamos lugares impares en el piso actual
-            IF NEW.Tipo_Vehiculo = 'Camioneta' THEN
-                -- Buscar un lugar impar disponible en el piso actual
-                SELECT lugar_parqueo INTO lugar_disponible
-                FROM Lugar_Parking
-                WHERE Disponible = true
-                  AND lugar_parqueo LIKE piso || '%'
-                  AND (CAST(SUBSTRING(lugar_parqueo FROM 2) AS INTEGER) % 2 = 1)  -- Solo lugares impares
-                ORDER BY RANDOM()
-                LIMIT 1
-                FOR UPDATE;
+    FOREACH piso IN ARRAY pisos LOOP
+        -- Si es camioneta, buscamos lugares impares en el piso actual
+        IF NEW.Tipo_Vehiculo = 'Camioneta' THEN
+            -- Buscar un lugar impar disponible en el piso actual
+            SELECT lugar_parqueo INTO lugar_disponible
+            FROM Lugar_Parking
+            WHERE Disponible = true
+              AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
+              AND (CAST(SUBSTRING(lugar_parqueo FROM 2) AS INTEGER) % 2 = 1)  -- Solo lugares impares
+            ORDER BY RANDOM()
+            LIMIT 1
+            FOR UPDATE;
 
-                -- Si no se encuentra un lugar impar en el piso actual, buscar en el siguiente piso
-                IF NOT FOUND THEN
-                    CONTINUE;  -- Pasa al siguiente piso
-                END IF;
-            ELSE
-                -- Si no es camioneta, buscamos cualquier lugar disponible en el piso actual
-                SELECT lugar_parqueo INTO lugar_disponible
-                FROM Lugar_Parking
-                WHERE Disponible = true
-                  AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
-                ORDER BY RANDOM()
-                LIMIT 1
-                FOR UPDATE;
-                
-                -- Si encontramos un lugar disponible, salimos del bucle
-                IF FOUND THEN
-                    EXIT;
-                END IF;
+            -- Si encontramos un lugar disponible, salimos del bucle
+            IF lugar_disponible IS NOT NULL THEN
+                EXIT;
             END IF;
-        END LOOP;
 
-        -- Si no se encuentra un lugar disponible, lanzar una excepción
-        IF NOT FOUND THEN
-            RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
+        ELSE
+            -- Si no es camioneta, buscamos cualquier lugar disponible en el piso actual
+            SELECT lugar_parqueo INTO lugar_disponible
+            FROM Lugar_Parking
+            WHERE Disponible = true
+              AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
+            ORDER BY RANDOM()
+            LIMIT 1
+            FOR UPDATE;
+            
+            -- Si encontramos un lugar disponible, salimos del bucle
+            IF lugar_disponible IS NOT NULL THEN
+                EXIT;
+            END IF;
         END IF;
-
-        -- Asignar el lugar disponible al nuevo registro
-        NEW.lugar_parqueo := lugar_disponible;
-
-        -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
-        UPDATE Lugar_Parking
-        SET Disponible = false,
-            Placa = NEW.Placa_Vehiculo,  -- Cambia "Placa" por el nombre correcto en la tabla Lugar_Parking
-            Tipo_Vehiculo = NEW.Tipo_Vehiculo  -- Asegúrate de que "Tipo_Vehiculo" existe en la tabla Lugar_Parking
-        WHERE lugar_parqueo = NEW.lugar_parqueo;
-
-        RETURN NEW;
     END LOOP;
+
+    -- Si no se encuentra un lugar disponible, lanzar una excepción
+    IF lugar_disponible IS NULL THEN
+        RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
+    END IF;
+
+    -- Asignar el lugar disponible al nuevo registro
+    NEW.lugar_parqueo := lugar_disponible;
+
+    -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
+    UPDATE Lugar_Parking
+    SET Disponible = false,
+        Placa = NEW.Placa_Vehiculo,  -- Cambia "Placa" por el nombre correcto en la tabla Lugar_Parking
+        Tipo_Vehiculo = NEW.Tipo_Vehiculo  -- Asegúrate de que "Tipo_Vehiculo" existe en la tabla Lugar_Parking
+    WHERE lugar_parqueo = NEW.lugar_parqueo;
+    
+    -- Insertar en historial de registro
+    INSERT INTO historial_registro (nombre, Placa_Vehiculo, Tipo_Vehiculo, lugar_parqueo, hora_ingreso, fecha_ingreso)
+    VALUES (NEW.nombre, NEW.Placa_Vehiculo, NEW.Tipo_Vehiculo, NEW.lugar_parqueo, current_time, current_date);
+
+    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 CREATE TRIGGER before_insert_registro
@@ -147,10 +148,12 @@ BEGIN
     WHERE placa_vehiculo = OLD.Placa_Vehiculo;
 
     -- Insertar un registro en la tabla Historial_Parqueadero con la hora de salida
-    INSERT INTO historial_registro (nombre,Placa_Vehiculo, Tipo_Vehiculo, lugar_parqueo, hora_ingreso, fecha_ingreso, hora_salida, fecha_salida)
-    VALUES (old.nombre,OLD.Placa_Vehiculo, OLD.Tipo_Vehiculo, OLD.lugar_parqueo, OLD.hora_ingreso, OLD.fecha_ingreso, current_time, current_date);
+		UPDATE historial_registro
+			SET hora_salida = current_time,
+			fecha_salida = current_date
+		WHERE lugar_parqueo = OLD.lugar_parqueo;
 
-    RETURN OLD;
+	RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -158,8 +161,6 @@ CREATE TRIGGER limpiar_lugar
 AFTER DELETE ON registro
 FOR EACH ROW
 EXECUTE FUNCTION limpiar_lugar_parqueo();
-
-
 
 #Contador  
 	

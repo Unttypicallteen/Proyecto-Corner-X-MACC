@@ -12,8 +12,21 @@ insert into vehiculo values ('ABC125','Camioneta');
 insert into vehiculo values ('ABC126','Camioneta');
 insert into vehiculo values ('ABC127','Camioneta');
 insert into vehiculo values ('OCT240','Camioneta');
-
-
+insert into vehiculo values ('ADM001', 'Carro');
+insert into vehiculo values ('ADM002', 'Camioneta');
+insert into vehiculo values ('ADM003', 'Carro');
+insert into vehiculo values ('ADM004', 'Camioneta');
+insert into vehiculo values ('ADM005', 'Carro');
+insert into vehiculo values ('ADM006', 'Camioneta');
+insert into vehiculo values ('ADM007', 'Carro');
+insert into vehiculo values ('ADM008', 'Camioneta');
+insert into vehiculo values ('ADM009', 'Carro');
+insert into vehiculo values ('ADM010', 'Camioneta');
+insert into vehiculo values ('ADM011', 'Carro');
+insert into vehiculo values ('ADM012', 'Camioneta');
+insert into vehiculo values ('ADM013', 'Carro');
+insert into vehiculo values ('ADM014', 'Camioneta');
+insert into vehiculo values ('ADM015', 'Camioneta');
 
 
 insert into conductor values ('1011087293','Maluma Baby','JSY980');
@@ -30,6 +43,21 @@ insert into conductor values ('1022556623','Morat','ABC125');
 insert into conductor values ('1022556625','Alvaro Diaz','ABC126');
 insert into conductor values ('1022556626','Myke Towers','ABC127');
 insert into conductor values ('1030254862','Mariana Sierra','OCT240');
+insert into conductor values ('1023456789', 'Administrativo 1', 'ADM001');
+insert into conductor values ('1045678932', 'Administrativo 2', 'ADM002');
+insert into conductor values ('1067892345', 'Administrativo 3', 'ADM003');
+insert into conductor values ('1078912345', 'Administrativo 4', 'ADM004');
+insert into conductor values ('1091234567', 'Administrativo 5', 'ADM005');
+insert into conductor values ('1023456781', 'Administrativo 6', 'ADM006');
+insert into conductor values ('1034567892', 'Administrativo 7', 'ADM007');
+insert into conductor values ('1045678923', 'Administrativo 8', 'ADM008');
+insert into conductor values ('1056789123', 'Administrativo 9', 'ADM009');
+insert into conductor values ('1067891234', 'Administrativo 10', 'ADM010');
+insert into conductor values ('1078912341', 'Administrativo 11', 'ADM011');
+insert into conductor values ('1089123452', 'Administrativo 12', 'ADM012');
+insert into conductor values ('1091234512', 'Administrativo 13', 'ADM013');
+insert into conductor values ('1022345673', 'Administrativo 14', 'ADM014');
+insert into conductor values ('1034567814', 'Administrativo 15', 'ADM015');
 
 
 

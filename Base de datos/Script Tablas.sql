@@ -22,6 +22,7 @@ CREATE TABLE Lugar_Parking (
     Disponible BOOLEAN NOT NULL,
     Placa CHAR(6),
     Tipo_Vehiculo VARCHAR(10),
+	Moto_Count INTEGER DEFAULT 0
 	 FOREIGN KEY (Placa) REFERENCES vehiculo(Placa),
 	 CHECK (Tipo_Vehiculo IN ('Moto', 'Carro', 'Camioneta'))
 );

@@ -67,61 +67,111 @@ create table historial_Registro(
 CREATE OR REPLACE FUNCTION asignar_lugar_parqueo()
 RETURNS TRIGGER AS $$
 DECLARE
-    lugar_disponible CHAR(3);
+    lugar_fijado CHAR(3);  -- Variable para almacenar el parqueadero seleccionado para las motos
     piso CHAR(1);
     pisos TEXT[] := ARRAY['A', 'B', 'C', 'D', 'E'];  -- Array con los pisos
 BEGIN
-    -- Bucle para seguir buscando lugar hasta encontrar uno que cumpla las condiciones
-    FOREACH piso IN ARRAY pisos LOOP
-        -- Si es camioneta, buscamos lugares impares en el piso actual
-        IF NEW.Tipo_Vehiculo = 'Camioneta' THEN
-            -- Buscar un lugar impar disponible en el piso actual
-            SELECT lugar_parqueo INTO lugar_disponible
-            FROM Lugar_Parking
-            WHERE Disponible = true
-              AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
-              AND (CAST(SUBSTRING(lugar_parqueo FROM 2) AS INTEGER) % 2 = 1)  -- Solo lugares impares
-            ORDER BY RANDOM()
-            LIMIT 1
-            FOR UPDATE;
-
-            -- Si encontramos un lugar disponible, salimos del bucle
-            IF lugar_disponible IS NOT NULL THEN
-                EXIT;
-            END IF;
-
-        ELSE
-            -- Si no es camioneta, buscamos cualquier lugar disponible en el piso actual
-            SELECT lugar_parqueo INTO lugar_disponible
-            FROM Lugar_Parking
-            WHERE Disponible = true
-              AND lugar_parqueo LIKE piso || '%'  -- Buscar lugares en el piso actual
-            ORDER BY RANDOM()
-            LIMIT 1
-            FOR UPDATE;
-            
-            -- Si encontramos un lugar disponible, salimos del bucle
-            IF lugar_disponible IS NOT NULL THEN
-                EXIT;
-            END IF;
-        END IF;
-    END LOOP;
-
-    -- Si no se encuentra un lugar disponible, lanzar una excepción
-    IF lugar_disponible IS NULL THEN
-        RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
+    -- Verificar si la placa ya está registrada en un lugar de parqueo
+    IF EXISTS (SELECT 1 FROM Lugar_Parking WHERE Placa = NEW.Placa_Vehiculo) THEN
+        RAISE EXCEPTION 'El vehículo con placa % ya está registrado en otro lugar de parqueo.', NEW.Placa_Vehiculo;
     END IF;
 
-    -- Asignar el lugar disponible al nuevo registro
-    NEW.lugar_parqueo := lugar_disponible;
+    -- Si el vehículo es una moto, intentamos encontrar un lugar con motos ya asignadas (hasta 3)
+    IF NEW.Tipo_Vehiculo = 'Moto' THEN
+        -- Buscar un lugar que ya tenga entre 1 y 3 motos y esté disponible
+        SELECT lugar_parqueo INTO lugar_fijado
+        FROM Lugar_Parking
+        WHERE Moto_Count >= 1
+          AND Moto_Count < 4
+          AND Disponible = true
+        ORDER BY lugar_parqueo  -- Podrías ordenar de otra forma si lo prefieres
+        LIMIT 1
+        FOR UPDATE;
+        
+        -- Si no se encuentra un lugar adecuado, seleccionamos un lugar completamente vacío
+        IF lugar_fijado IS NULL THEN
+            FOREACH piso IN ARRAY pisos LOOP
+                SELECT lugar_parqueo INTO lugar_fijado
+                FROM Lugar_Parking
+                WHERE Disponible = true
+                  AND lugar_parqueo LIKE piso || '%'
+                ORDER BY RANDOM()
+                LIMIT 1
+                FOR UPDATE;
+                
+                -- Salimos del bucle si encontramos un lugar disponible
+                IF lugar_fijado IS NOT NULL THEN
+                    EXIT;
+                END IF;
+            END LOOP;
+        END IF;
 
-    -- Marcar el lugar de parqueo como ocupado y asignar placa y tipo de vehículo
-    UPDATE Lugar_Parking
-    SET Disponible = false,
-        Placa = NEW.Placa_Vehiculo,  -- Cambia "Placa" por el nombre correcto en la tabla Lugar_Parking
-        Tipo_Vehiculo = NEW.Tipo_Vehiculo  -- Asegúrate de que "Tipo_Vehiculo" existe en la tabla Lugar_Parking
-    WHERE lugar_parqueo = NEW.lugar_parqueo;
-    
+        -- Si no se encuentra un lugar disponible, lanzamos una excepción
+        IF lugar_fijado IS NULL THEN
+            RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
+        END IF;
+
+        -- Asignar el lugar fijado al nuevo registro
+        NEW.lugar_parqueo := lugar_fijado;
+
+        -- Actualizar la tabla de lugares de parqueo para incrementar el contador de motos
+        UPDATE Lugar_Parking
+        SET Moto_Count = Moto_Count + 1
+        WHERE lugar_parqueo = lugar_fijado;
+
+        -- Si el lugar tiene 4 motos, marcarlo como no disponible para más motos
+        IF (SELECT Moto_Count FROM Lugar_Parking WHERE lugar_parqueo = lugar_fijado) >= 4 THEN
+            UPDATE Lugar_Parking
+            SET Disponible = false
+            WHERE lugar_parqueo = lugar_fijado;
+        END IF;
+
+    ELSE
+        -- Para camionetas y otros vehículos, usamos el mismo bucle de pisos que antes
+        FOREACH piso IN ARRAY pisos LOOP
+            IF NEW.Tipo_Vehiculo = 'Camioneta' THEN
+                -- Para camionetas, seleccionar un lugar impar y disponible
+                SELECT lugar_parqueo INTO lugar_fijado
+                FROM Lugar_Parking
+                WHERE Disponible = true
+                  AND lugar_parqueo LIKE piso || '%'  -- En el piso actual
+                  AND (CAST(SUBSTRING(lugar_parqueo FROM 2) AS INTEGER) % 2 = 1)  -- Solo lugares impares
+                ORDER BY RANDOM()
+                LIMIT 1
+                FOR UPDATE;
+            ELSE
+                -- Para otros vehículos, seleccionar cualquier lugar disponible en el piso actual
+                SELECT lugar_parqueo INTO lugar_fijado
+                FROM Lugar_Parking
+                WHERE Disponible = true
+                  AND lugar_parqueo LIKE piso || '%'
+                ORDER BY RANDOM()
+                LIMIT 1
+                FOR UPDATE;
+            END IF;
+
+            -- Si encontramos un lugar disponible, salimos del bucle
+            IF lugar_fijado IS NOT NULL THEN
+                EXIT;
+            END IF;
+        END LOOP;
+
+        -- Si no se encuentra un lugar disponible, lanzamos una excepción
+        IF lugar_fijado IS NULL THEN
+            RAISE EXCEPTION 'No hay lugares disponibles en este momento.';
+        END IF;
+
+        -- Asignar el lugar disponible al nuevo registro
+        NEW.lugar_parqueo := lugar_fijado;
+
+        -- Marcar el lugar como ocupado y asignar la placa y tipo de vehículo
+        UPDATE Lugar_Parking
+        SET Disponible = false,
+            Placa = NEW.Placa_Vehiculo,
+            Tipo_Vehiculo = NEW.Tipo_Vehiculo
+        WHERE lugar_parqueo = NEW.lugar_parqueo AND Disponible = true;
+    END IF;
+
     -- Insertar en historial de registro
     INSERT INTO historial_registro (nombre, Placa_Vehiculo, Tipo_Vehiculo, lugar_parqueo, hora_ingreso, fecha_ingreso)
     VALUES (NEW.nombre, NEW.Placa_Vehiculo, NEW.Tipo_Vehiculo, NEW.lugar_parqueo, current_time, current_date);
@@ -129,6 +179,7 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 CREATE TRIGGER before_insert_registro

@@ -51,21 +51,6 @@ Se diseñó un sistema de placa electrónica (PCB) que puede integrarse para con
 
 ---
 
-## 📂 Estructura general del repositorio
-
-Proyecto-Corner-X-MACC-main/
-├── Base de datos/
-│ ├── Script Tablas.sql
-│ ├── Pruebas Tablas.sql
-│ └── MER visual (.png)
-├── Diseño página/
-├── Renders/
-│ ├── Modelos 3D (.gltf, .bin)
-│ └── Texturas
-├── Placa Electrónica/
-│ └── PCB.zip
-├── README.md
-
 
 ## 🚀 Ejecución del sistema
 
